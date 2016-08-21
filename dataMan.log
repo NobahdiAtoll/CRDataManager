@@ -1,32 +1,3 @@
 
-Group: 'Test Group' touched book: Lunita V2013 #2 (of 4) (2014/4)
-    CustomField: TestField1    Action: TestField1 SETVALUE 'Screw'
-        Previous Value: 
-        New Value: Screw
-    CustomField: TestField2    Action: TestField2 SETVALUE 'You'
-        Previous Value: 
-        New Value: You
 
-
-Book: Lunita V2013 #2 (of 4) (2014/4) was touched. Ruleset: Null Matches (Tags IS '' => ScanInformation SETVALUE 'Blah')
-    Field: ScanInformation    Action: ScanInformation SETVALUE 'Blah'
-        Previous Value: 
-        New Value: Blah
-
-
-Group: 'Test Group' touched book: Lunita V2013 #3 (of 4) (2014/6)
-    CustomField: TestField1    Action: TestField1 SETVALUE 'Screw'
-        Previous Value: 
-        New Value: Screw
-    CustomField: TestField2    Action: TestField2 SETVALUE 'You'
-        Previous Value: 
-        New Value: You
-
-
-Book: Lunita V2013 #3 (of 4) (2014/6) was touched. Ruleset: Null Matches (Tags IS '' => ScanInformation SETVALUE 'Blah')
-    Field: ScanInformation    Action: ScanInformation SETVALUE 'Blah'
-        Previous Value: 
-        New Value: Blah
-
-
-2 Books were modified. 4 Values were changed
+0 Books were modified. 0 Values were changed

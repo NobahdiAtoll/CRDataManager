@@ -33,6 +33,7 @@ def crVersion():
 		return False
 	return True
 
+
 # ============================================================================      
 # hook to run the configScript
 #@Name	 Data Manager configuration
@@ -45,6 +46,7 @@ def dmRunConfig():
     p.StartInfo.FileName = dmGlobals.GUIEXE
     p.Start()
     pass
+
 
 # ============================================================================ 
 # hook to run the main dataManager loop

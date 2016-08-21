@@ -25,42 +25,26 @@ from System.IO import File, Directory
 class dmNode:
     """Base of all classes used in a dmCollection"""
 
-    @property
-    def Name(self): return self.__Name
-    @Name.setter
-    def Name(self, strName): self.__Name = strName
-    @property
-    def Comment(self): return self.__Comment
-    @Comment.setter
-    def Comment(self, strComment): self.__Comment = strComment
-    @property
-    def Parent(self): return self.__Parent
-    @Parent.setter
-    def Parent(self, dmcContainer): return self.__Parent
+    def getName(self): return self.__Name
+    def setName(self, strName): self.__Name = strName
+    Name = property(getName, setName)
+
+    def getComment(self): return self.__Comment
+    def setComment(self, strComment): self.__Comment = strComment
+    Comment = property(getComment, setComment)
+
+    def getParent(self): return self.__Parent
+    def setParent(self, dmcContainer): return self.__Parent
+    Parent = property(getParent, setParent)
 
     def __init__(self, dmnparent, strParameters):
         if dmGlobals.TraceFunctionMessages:
             print 'dmNode constructor: dmNode(dmNodeParent, strParameters)'
 
-        self.__Parent = dmnparent #this is not necessary for processing dmNodes while running but will come in handy for the editor
-        self.__Name = '' #all inheriting nodes are capable of having a name
-        self.__Comment = '' #all inheriting nodes are capabale of having a comment
+        self.Parent = dmnparent #this is not necessary for processing dmNodes while running but will come in handy for the editor
+        self.Name = '' #all inheriting nodes are capable of having a name
+        self.Comment = '' #all inheriting nodes are capabale of having a comment
         
-        pass
-
-    def XMLSerialize(self, elementName):
-        if dmGlobals.TraceFunctionMessages:
-            print 'Method dmNode:XMLSerialise(elementName)'
-
-        self.ToXML(elementName)
-        
-        pass
-
-    def XMLDeseriealize(self, element):
-        if dmGlobals.TraceFunctionMessages:
-            print 'Method dmNode:XMLDeserialise(element)'
-
-        self.FromXML(element)
         pass
 
     def ToXML(self, elementName):
@@ -82,10 +66,10 @@ class dmNode:
             print 'Method dmNode:ToXML(element)'
 
         if element.Attribute(XName.Get('name')) != None:
-           self.Name = element.Attribute(XName.Get('name'))
+           self.Name = element.Attribute(XName.Get('name')).Value
            
         if element.Attribute(XName.Get('comment')) != None:
-           self.Comment = element.Attribute(('comment'))
+           self.Comment = element.Attribute(('comment')).Value
            
         pass
 
@@ -100,16 +84,14 @@ class dmNode:
 class dmContainer(dmNode):
     """a container that contains groups and rulesets [base for dmCollection and dmGroup]"""
 
-    @property
-    def Groups(self): return self.__Groups
-    @Groups.setter
-    def Groups(self, groups): self.__Groups = groups
-    
-    @property
-    def Rulesets(self): return self.__Rulesets
-    @Rulesets.setter
-    def Rulesets(self, rulesets): self.__Rulesets = rulesets
-    
+    def getGroups(self): return self.__Groups
+    def setGroups(self, groups): self.__Groups = List[dmGroup](groups)
+    Groups = property(getGroups, setGroups)
+
+    def getRulesets(self): return self.__Rulesets
+    def setRulesets(self, rulesets): self.__Rulesets = List[dmRuleset](rulesets)
+    Rulesets = property(getRulesets, setRulesets)
+
     def __init__(self, dmnparent, strParameters):
         """Initializes a dmContainer object"""
         if dmGlobals.TraceFunctionMessages:
@@ -117,8 +99,8 @@ class dmContainer(dmNode):
 
         dmNode.__init__(self, dmnparent, strParameters) #initialize all properties inheirited from dmNode
         
-        self.__Groups = [] #create Group List
-        self.__Rulesets = [] #create Ruleset List
+        self.Groups = [] #create Group List
+        self.Rulesets = [] #create Ruleset List        
         
         pass
 
@@ -259,7 +241,8 @@ class dmContainer(dmNode):
 
     def FromXML(self, element):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmContainer:FromXML(xmlElement)'
-        dmNode.XMLDeseriealize(self, element)
+        dmNode.FromXML(self, element)
+        
         for group in element.Elements(XName.Get('group')):
             self.Groups.append(dmGroup(self, group))
         for ruleset in element.Elements(XName.Get('ruleset')):
@@ -269,40 +252,44 @@ class dmContainer(dmNode):
 class dmCollection(dmContainer):
     """The base object for groups and rulesets"""
     
-    @property
-    def Disabled(self): return self.__Disabled
-    @Disabled.setter
-    def Disabled(self, dmgGroup): self.__Disabled = dmgGroup
-    @property
-    def Version(self): return self.__Version
-    @Version.setter
-    def Version(self, version): self.__setversion__(version)
+    def getDisabled(self): return self.__Disabled
+    def setDisabled(self, dmgGroup): self.__Disabled = dmgGroup
+    Disabled = property(getDisabled, setDisabled)
+    
+    def getVersion(self): return self.__Version
+    def setVersion(self, version): self.__setversion__(version)
+    Version = property(getVersion, setVersion)
+
 
     def __init__(self, strParameters):
         if dmGlobals.TraceFunctionMessages: print 'dmCollection constructor: dmCollection(objParameters)'
         if dmGlobals.TraceGeneralMessages: print 'Compiling Ruleset Collection'
         dmContainer.__init__(self, None, strParameters)
-        self.__Disabled = dmGroup(self)
-        self.__Version = System.Version(1,1,9,9)       
-        if strParameters != None: 
-            self.ParseParameters(strParameters)
+        self.Disabled = dmGroup(self)
+        self.Version = System.Version(1,1,9,9)
+               
+        if strParameters != None:
+            if isinstance(strParameters, XElement):
+                self.FromXML(strParameters)
+            else:
+                self.ParseParameters(strParameters)
         pass
 
     def __setversion__(self, vItem):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmCollection:__setversion__(objVersion)'
-        if isinstance(version, System.Version):
-            self.__Version = vItem
-        elif isinstance(version, str):
-            self.__Version = System.Version.Parse(vItem)
+        if isinstance(vItem, System.Version):
+            self.Version = vItem
+        elif isinstance(vItem, str):
+            self.Version = System.Version.Parse(vItem)
 
     def ParseParameters(self, strParameters):
         """Parses the file to a collection"""
         if dmGlobals.TraceFunctionMessages: print 'Method: dmCollection:ParseParameters(objParameters)'
-        if isinstance(strParameters, str):
-            if File.Exists(strParameters):
+        if File.Exists(strParameters):
+            try:
+                self.FromXML(System.Xml.Linq.XDocument.Load(strParameters).Root)
+            except:
                 self.Parse(File.ReadAllLines(strParameters))
-        elif isinstance(strParameters, XElement):
-            self.FromXML(strParameters)
         pass
     
     def Parse(self, arrParameters):
@@ -357,30 +344,34 @@ class dmCollection(dmContainer):
 
     def FromXML(self, element):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmCollection:FromXML(xmlElement)'
-        dmContainer.FromXML(self,element)
-        self.Disabled = dmGroup(self, element.Element(XName.Get('disabled')))
+        dmContainer.FromXML(self, element)
+        self.Disabled = dmGroup(self, element.Element(XName.Get('Disabled')))
+        self.__setversion__(element.Attribute(XName.Get('version')).Value)
         pass
     
 class dmGroup(dmContainer):
     """a named group of groups and rulesets (derived from dmContainer)"""
 
-    @property
-    def FiltersAndDefaults(self): return self.__FiltersAndDefaults
-    @FiltersAndDefaults.setter
-    def FiltersAndDefaults(self, dmrRuleset): self.__FiltersAndDefaults = dmrRuleset
+    def getFiltersAndDefaults(self): return self.__FiltersAndDefaults
+    def setFiltersAndDefaults(self, dmrRuleset): self.__FiltersAndDefaults = dmrRuleset
+    FiltersAndDefaults = property(getFiltersAndDefaults, setFiltersAndDefaults)
 
     def __init__(self, dmcparent, strParameters=None):
         if dmGlobals.TraceFunctionMessages: print 'dmGroup constructor: dmGroup(dmContainerParent, objParameters)'
         dmContainer.__init__(self, dmcparent, strParameters)
-        self.__FiltersAndDefaults = dmRuleset(self, None)
-        if strParameters != None: 
-            self.ParseParameters(strParameters)
+        self.FiltersAndDefaults = dmRuleset(self, None)
+        
+        if strParameters != None:
+            if isinstance(strParameters, XElement):
+                self.FromXML(strParameters)
+            else:
+                self.ParseParameters(strParameters)
         pass
     
     def ParseParameters(self, strParameters):
         """Parses Parameters of Group from a string or list of parameters"""
         if dmGlobals.TraceFunctionMessages: print 'Method: dmGroup:ParseParameters(objParameters)'
-        if isinstance(strParamaters, str) or isinstance(strParameters, list):
+        if isinstance(strParameters, str) or isinstance(strParameters, list):
             arrParameters = list()
             if isinstance(strParameters, str):
                 arrParameters = strParameters.splitlines() #split string into lines
@@ -404,7 +395,7 @@ class dmGroup(dmContainer):
                     nReturn = self.ParseGroup(arrParameters, nReturn, self)
                 elif arrParameters[nReturn].startswith(RULESETHEADER) or not arrParameters[nReturn].startswith('#'):
                     nReturn = ParseRuleset(arrParameters, nReturn, self)
-        elif isinstance(strParameters, Element):
+        elif isinstance(strParameters, XElement):
             self.FromXML(strParameters)
         pass
     
@@ -443,7 +434,7 @@ class dmGroup(dmContainer):
     def ToXML(self, elementName):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmGroup:ToXML(stringElementName)'
         baseElement = dmContainer.ToXML(self, elementName)
-        baseElement.Add(self.FiltersAndDefaults.XMLSerialize('filtersanddefaults'))
+        baseElement.Add(self.FiltersAndDefaults.ToXML('filtersanddefaults'))
         return baseElement
 
     def FromXML(self, element):
@@ -460,34 +451,34 @@ class dmGroup(dmContainer):
 class dmRuleset(dmNode):
     """Container for rules and actions"""
 
-    @property
-    def RulesetMode(self): return self.__RulesetMode
-    @RulesetMode.setter
-    def RulesetMode(self, strANDorOR): 
+    def getRulesetMode(self): return self.__RulesetMode
+    def setRulesetMode(self, strANDorOR): 
         if strANDorOR.lower() == 'and': self.__RulesetMode = 'AND'
         elif strANDorOR.lower() == 'or': self.__RulesetMode = 'OR'            
         else: self.__RulesetMode = 'AND'
+    RulesetMode = property(getRulesetMode, setRulesetMode)
 
-    @property
-    def Rules(self): return self.__Rules
-    @Rules.setter
-    def Rules(self, lstRules): self.__Rules = List[dmRule](lstRules)
+    def getRules(self): return self.__Rules
+    def setRules(self, lstRules): self.__Rules = List[dmRule](lstRules)
+    Rules = property(getRules, setRules)
 
-    @property
-    def Actions(self): return self.__Actions
-    @Actions.setter
-    def Actions(self, lstActions): self.__Actions = List[dmAction](lstActions)
+    def getActions(self): return self.__Actions
+    def setActions(self, lstActions): self.__Actions = List[dmAction](lstActions)
+    Actions = property(getActions, setActions)
 
-    def __init__(self, dmcparent, strParameters):
+    def __init__(self, dmcparent, strParameters=None):
         """initializes ruleset instance"""
         if dmGlobals.TraceFunctionMessages: print 'dmRuleset constructor: dmRuleset(objParameters)'
         dmNode.__init__(self, dmcparent, strParameters) #calls base initialize which adds base fields
-        self.__RulesetMode = 'AND' #sets ruleset mode by default to AND ParseParameters call (from dmNode) later corrrects if and is used
-        self.__Rules = [] #initializes list of rules
-        self.__Actions = [] #initializes list of actions
+        self.RulesetMode = 'AND' #sets ruleset mode by default to AND ParseParameters call (from dmNode) later corrrects if and is used
+        self.Rules = [] #initializes list of rules
+        self.Actions = [] #initializes list of actions
         
-        if strParameters != None: 
-            self.ParseParameters(strParameters)
+        if strParameters != None:
+            if isinstance(strParameters, XElement):
+                self.FromXML(strParameters)
+            else:
+                self.ParseParameters(strParameters)
         pass
 
     def ParseParameters(self, strParameters):
@@ -503,7 +494,7 @@ class dmRuleset(dmNode):
                 rulesAndActions = strParsed.lstrip('|').split('=>',1) #split Rules and Actions
                 self.ParseItemParameters(rulesAndActions[0], 'Rule') #Parse Rules
                 self.ParseItemParameters(rulesAndActions[1], 'Action') #Parse Actions
-        elif isinstance(strParameters, Element):
+        elif isinstance(strParameters, XElement):
             self.FromXML(strParameters)
         pass
         
@@ -607,7 +598,8 @@ class dmRuleset(dmNode):
 
     def FromXML(self, element):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRuleset:FromXML(xmlElement)'
-        self.RulesetMode = element.Attribute['rulesetmode']
+        dmNode.FromXML(self, element)
+        self.RulesetMode = element.Attribute(XName.Get('rulesetmode')).Value
         for rule in element.Elements(XName.Get('rule')):
             self.Rules.append(dmRule(self, rule))
         for action in element.Elements(XName.Get('action')):
@@ -615,29 +607,28 @@ class dmRuleset(dmNode):
         pass
 
 class dmParameters(dmNode):
-    """base object for dmRule & dmAction instances"""
-    def __init__(self, dmnparent, strParameters):
-        """initializes a dmParameter instance"""
-        dmNode.__init__(self, dmnparent, strParameters) #calls the base dmNode initializer to initialize further fields
-        self.Field = '' #initializes the field
-        self.Modifier = '' #initializes the modifier value
-        self.Value = '' #initializes the value value
-        if strParameters != None: 
-            self.ParseParameters(strParameters)
-        pass
     
-
-    @property
-    def CompleteField(self):
-        return self.Field
-   
-    @CompleteField.setter
-    def CompleteField(self, strCompleteField):
+    def getField(self):
+        return self._Field
+    def setField(self, strCompleteField):
         self.ParseField(strCompleteField)
+    Field = property(getField, setField)
+
+    def getModifier(self):
+        return self._Modifier
+    def setModifier(self, strModifier):
+        self._Modifier = strModifier
+    Modifier = property(getModifier, setModifier)
+
+    def getValue(self):
+        return self._Value
+    def setValue(self, strValue):
+        self._Value = strValue
+    Value = property(getValue, setValue)
 
     @property
     def IsCustomField(self):
-        return self.Field in dmGlobals.READONLYKEYS or not self.Field in dmGlobals.ALLOWEDVALS
+        return self.Field in dmGlobals.READONLYKEYS or not self.Field in dmGlobals.ALLOWEDVALS    
 
     @property       
     def IsValid(self):
@@ -662,6 +653,21 @@ class dmParameters(dmNode):
         if not ValueValid():
             bReturn = false
         return bReturn
+
+    """base object for dmRule & dmAction instances"""
+    def __init__(self, dmnparent, strParameters):
+        """initializes a dmParameter instance"""
+        dmNode.__init__(self, dmnparent, strParameters) #calls the base dmNode initializer to initialize further fields
+        self.Field = '' #initializes the field
+        self.Modifier = '' #initializes the modifier value
+        self.Value = '' #initializes the value value
+        
+        if strParameters != None:
+            if isinstance(strParameters, XElement):
+                self.FromXML(strParameters)
+            else:
+                self.ParseParameters(strParameters)
+        pass
 
     def ValueValid(self):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:ValueValid()'
@@ -729,14 +735,8 @@ class dmParameters(dmNode):
                 self.Value = modfierAndValue[1] #set the value accordingly
             else:
                 self.Value = '' #otherwise set Value to empty string for safety purposes
-        
-            if self.Modifier.strip() == '':
-                pass
-            if self.Field == '':
-                pass
-            if self.CompleteField.Contains('Custom'):
-                pass
-        elif isinstance(strParameters,Element):
+
+        elif isinstance(strParameters, XElement):
             self.FromXML(strParameters)
         else:
             print 'could not parse Parameter Info' + strParameter
@@ -819,9 +819,9 @@ class dmParameters(dmNode):
         
         if strCompleteField.startswith('Custom'): # if CustomField begins with 'Custom'
             tmpRegex = Regex("Custom\((.*?)\)")
-            self.Field = tmpRegex.Match(strCompleteField).Groups[1].Value #set the Field Value
+            self._Field = tmpRegex.Match(strCompleteField).Groups[1].Value #set the Field Value
         else: #otherwise
-            self.Field = strCompleteField #Field value == CompleteField value            
+            self._Field = strCompleteField #Field value == CompleteField value            
         pass
     
     def ToXML(self, elementName):
@@ -834,9 +834,9 @@ class dmParameters(dmNode):
 
     def FromXML(self, element):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:FromXML(xmlElement)'
-        self.CompleteField = element.Attribute(XName.Get('field'))
-        self.Modifier = element.Attribute(XName.Get('modifier'))
-        self.Value = element.Attribute(XName.Get('value'))
+        self.Field = element.Attribute(XName.Get('field')).Value
+        self.Modifier = element.Attribute(XName.Get('modifier')).Value
+        self.Value = element.Attribute(XName.Get('value')).Value
 
     def ToString(self):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:ToString()'
