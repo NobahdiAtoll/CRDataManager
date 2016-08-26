@@ -408,6 +408,8 @@ class dmGroup(dmContainer):
         if dmGlobals.TraceFunctionMessages:
             print 'Method: dmGroup:ProcessBook(book, backgroundWorker)'
 
+        strReport = ''
+
         if self.MeetsConditions(book):
             if dmGlobals.TraceGeneralMessages: print 'Book: \'' + book.CaptionWithoutTitle + '\' Meets conditions, Processing.'
             strReport = dmContainer.ProcessBook(self, book, bgWorker)
@@ -524,7 +526,7 @@ class dmRuleset(dmNode):
                 if rule.Match(book): #we only need one match to decide if conditions are met in OR mode
                     bReturn = True #set return True as soon as a match found
                     break #and then exit iteration
-        elif self.RulesetMode == 'AND': #if we are using AND mode
+        else: #if we are using AND mode
             if dmGlobals.TraceGeneralMessages: print 'Checking rules in AND Mode'
             for rule in self.Rules: #iterate through Rules
                 if not rule.Match(book): # we only need one non-match to determine conditions are not met

@@ -33,7 +33,6 @@ def crVersion():
 		return False
 	return True
 
-
 # ============================================================================      
 # hook to run the configScript
 #@Name	 Data Manager configuration
