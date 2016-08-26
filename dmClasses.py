@@ -507,9 +507,9 @@ class dmRuleset(dmNode):
         for parameter in parameters: #for each item in the created list
             if parameter.strip() != '': #if the item is not an empty string
                 if strRuleOrAction == 'Rule': #if indicated as a Rule
-                    self.Rules.append(dmRule(self, parameter.strip())) #create and add a dmRule instance to this Ruleset's Rules
+                    self.Rules.Add(dmRule(self, parameter)) #create and add a dmRule instance to this Ruleset's Rules
                 elif strRuleOrAction == 'Action': #if indicated as an Action
-                    self.Actions.append(dmAction(self, parameter.strip())) #create and add a dmAction instance to this Ruleset's Actions
+                    self.Actions.Add(dmAction(self, parameter)) #create and add a dmAction instance to this Ruleset's Actions
         pass
     
     def MeetsConditions(self, book):
@@ -723,7 +723,7 @@ class dmParameters(dmNode):
         """Parses the string containing info for the parameters"""
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:ParseParameters(objParameters)'
         if isinstance(strParameters, str):
-            item = strParameters.strip() #strip whitespace from front and back of string
+            item = strParameters.strip() #strip whitespace from front of string
         
             item = item.lstrip('<') #remove all instances '<' from front of string
             item = item.rstrip('>') #remove all instances '>' from back of string
@@ -803,9 +803,9 @@ class dmParameters(dmNode):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:GetList(book, strFieldName)'
         strList = getattr(book, strFieldName)
         if strList == None or strList == '': 
-            strList = ''.Split(Array[str](dmGlobals.CRLISTDELIMITER), StringSplitOptions.RemoveEmptyEntries)
+            strList = List[str](''.Split(Array[str](dmGlobals.CRLISTDELIMITER), StringSplitOptions.RemoveEmptyEntries))
         else:
-            strList = strList.Split(Array[str](dmGlobals.CRLISTDELIMITER), StringSplitOptions.RemoveEmptyEntries)
+            strList = List[str](strList.Split(Array[str](dmGlobals.CRLISTDELIMITER), StringSplitOptions.RemoveEmptyEntries))
         return strList
 
     def GetCustomField(self, book, strFieldName):
@@ -1217,6 +1217,7 @@ class dmAction(dmParameters):
             if dmGlobals.SortLists:
                 newVal.sort()
             newVal = dmGlobals.CRLISTDELIMITER.join(newVal)
+            previousVal = dmGlobals.CRLISTDELIMITER.join(previousVal)
 
         strReport = ''            
         if FieldValue in dmGlobals.ALLOWEDVALS:
@@ -1303,8 +1304,8 @@ class dmAction(dmParameters):
                     if value.lower() == existingItem.lower():
                         addItem = False
                         break
-                if addItem: 
-                    newVal.append(value)
+            if addItem:
+                newVal.Add(value)
         else: #since this is only a valid modifier for list and string assume string            
             for item in setValue:
                 newVal = newVal + item
