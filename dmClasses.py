@@ -840,6 +840,20 @@ class dmParameters(dmNode):
         self.Modifier = element.Attribute(XName.Get('modifier')).Value
         self.Value = element.Attribute(XName.Get('value')).Value
 
+    def ReplaceReferenceStrings(self, strValue, book):
+        """Replaces references to other fields and newline and tab references"""
+        if dmGlobals.TraceFunctionMessages: print 'dmAction:ReplaceReferenceStrings(self, strValue, book)'
+        strNewValue = strValue
+                
+        strNewValue = strNewValue.replace('{newline}', System.Environment.NewLine)
+        strNewValue = strNewValue.replace('{tab}', '    ')
+        
+        #find field (including custom) references and replace
+        for x in Regex.Matches(strNewValue, "\\{([^}]+?)}"):
+            strNewValue = strNewValue.replace(x.Groups[0].Value, self.GetFieldValue(book, x.Groups[1].Value))      
+
+        return strNewValue
+
     def ToString(self):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:ToString()'
         strReturn = self.Field + ' ' + self.Modifier.upper() + ' \'' + self.Value + '\''
@@ -862,7 +876,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:Is(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.FieldConvert(self.Value ,self.Field) #value to compare
+        compareValue = self.FieldConvert(self.ReplaceReferenceStrings(self.Value, book) ,self.Field) #value to compare
         
         if self.Field in dmGlobals.FIELDSLIST: #deal with list items as individual items
             
@@ -893,7 +907,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:IsAnyOf(book)'
                 
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value.split(dmGlobals.DMLISTDELIMITER)  #value to compare as list
+        compareValue = self.ReplaceReferenceStrings(self.Value, book).split(dmGlobals.DMLISTDELIMITER)  #value to compare as list
        
         for word in compareValue:
             if isinstance(getValue, str): #if dealing with string
@@ -912,7 +926,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:Contains(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value  #value to compare
+        compareValue = self.FieldConvert(self.ReplaceReferenceStrings(self.Value, book), self.Field)  #value to compare
                 
         if self.Field in dmGlobals.FIELDSLIST: #search as string list            
             for check in getValue:
@@ -933,7 +947,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:ContainsAnyOf(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value.split(dmGlobals.DMLISTDELIMITER)  #value to compare
+        compareValue = self.ReplaceReferenceStrings(self.Value, book).split(dmGlobals.DMLISTDELIMITER)  #value to compare
                 
         for compareItem in compareValue:
             if self.Field in dmGlobals.FIELDSLIST: #compare list against list
@@ -956,7 +970,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:ContainsAllOf(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value.split(dmGlobals.DMLISTDELIMITER)  #value to compare
+        compareValue = self.ReplaceReferenceStrings(self.Value, book).split(dmGlobals.DMLISTDELIMITER)  #value to compare
 
         count = 0               
         for compareItem in compareValue:
@@ -979,7 +993,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:StartsWith(book)'
                 
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value  #value to compare
+        compareValue = self.ReplaceReferenceStrings(self.Value, book)  #value to compare
         
         return getValue.lower().startswith(compareValue.lower())
 
@@ -993,7 +1007,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:StartsWithAnyOf(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value.split(dmGlobals.DMLISTDELIMITER)  #value to compare
+        compareValue = self.ReplaceReferenceStrings(self.Value, book).split(dmGlobals.DMLISTDELIMITER)  #value to compare
         
         for compareItem in compareValue: #compare each item until truth found 
             if getValue.lower().startswith(compareItem.lower()): #check if list item at the beginning of string
@@ -1011,7 +1025,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:Greater(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value  #value to compare
+        compareValue = self.FieldConvert(self.Value, self.Field)  #value to compare
 
         if self.Field in dmGlobals.FIELDSNUMERIC:
             try:
@@ -1083,7 +1097,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:Less(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.Value  #value to compare
+        compareValue = self.FieldConvert(self.Value, self.Field)  #value to compare
 
         if self.Field in dmGlobals.FIELDSNUMERIC:
             try:
@@ -1151,20 +1165,18 @@ class dmRule(dmParameters):
     def Range(self, book):
         """Only applicable with numeric, psuedo numeric, and date"""
         if dmGlobals.TraceFunctionMessages: print 'Method dmRule:Range(book)'
+
         getValue = self.GetFieldValue(book, self.Field)
         
         minVal = self.Value.split(dmGlobals.DMLISTDELIMITER)[0]
         maxVal = self.Value.split(dmGlobals.DMLISTDELIMITER)[1]
         
-        if self.Field in dmGlobals.FIELDSNUMERIC:
+        if self.Field in dmGlobals.FIELDSNUMERIC or dmGlobals.FIELDSPSUEDONUMERIC:
             minVal = dmGlobals.StringToFloat(minVal)
             maxVal = dmGlobals.StringToFloat(maxVal)
-        elif self.Field in dmGlobals.FIELDSPSUEDONUMERIC:
-             
-             pass
         elif self.Field in dmGlobals.FIELDSDATETIME:
             minVal = System.DateTime.Parse(minVal)
-            maxVal = System.DateTime.Parse(maxVal + ' 23:59:59')
+            maxVal = System.DateTime.Parse(minVal + ' 23:59:59')
         if getValue >= minVal and getValue <= maxVal:
             return True
         return False
@@ -1179,7 +1191,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:RegEx(book)'
 
         getValue = self.GetFieldValue(book, self.Field)
-        compareValue = self.Value
+        compareValue = self.ReplaceReferenceStrings(self.Value, book)
 
         regExp = Regex(compareValue, RegexOptions.Singleline | RegexOptions.IgnoreCase)
 
@@ -1249,19 +1261,6 @@ class dmAction(dmParameters):
         book.SetCustomValue(strCustomFieldName, strNewValue)
         pass
     
-    def ReplaceReferenceStrings(self, strValue, book):
-        """Replaces references to other fields and newline and tab references"""
-        if dmGlobals.TraceFunctionMessages: print 'dmAction:ReplaceReferenceStrings(self, strValue, book)'
-        strNewValue = strValue
-                
-        strNewValue = strNewValue.replace('{newline}', System.Environment.NewLine)
-        strNewValue = strNewValue.replace('{tab}', '    ')
-        
-        #find field (including custom) references and replace
-        for x in Regex.Matches(strNewValue, "\\{([^}]+?)}"):
-            strNewValue = strNewValue.replace(x.Groups[0].Value, self.GetFieldValue(book, x.Groups[1].Value))      
-
-        return strNewValue
     
     def GetAppendedField(self, strFieldName, book, strAppendString):
         objReturn = self.GetFieldValue(book, strFieldName)
