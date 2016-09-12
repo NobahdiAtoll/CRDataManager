@@ -132,6 +132,8 @@ class runProcess(Form):
         bookTouchCount = 0
         fieldTouchCount = 0
 
+        userVariables = Dictionary[str,str]()
+
         strReport = ''
 
         if System.IO.File.Exists(dmGlobals.LOGFILE):

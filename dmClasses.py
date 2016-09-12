@@ -926,7 +926,7 @@ class dmRule(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:Contains(book)'
         
         getValue = self.GetFieldValue(book, self.Field) #get Value from book
-        compareValue = self.FieldConvert(self.ReplaceReferenceStrings(self.Value, book), self.Field)  #value to compare
+        compareValue = self.ReplaceReferenceStrings(self.Value, book)  #value to compare
                 
         if self.Field in dmGlobals.FIELDSLIST: #search as string list            
             for check in getValue:
@@ -1018,7 +1018,7 @@ class dmRule(dmParameters):
     def NotStartsWithAnyOf(self, book):
         """Only applicable with string"""
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:NotNotStartsWithAnyOf(book)'
-        return not StartsWithAnyOf(book)
+        return not self.StartsWithAnyOf(book)
 
     def Greater(self, book):
         """Only applicable with numeric, psuedo numeric, and date"""        

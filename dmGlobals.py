@@ -6,12 +6,12 @@ import iniReadWrite
 from System import Array
 from System import StringSplitOptions
 from iniReadWrite import *
-
+from System.Collections.Generic import Dictionary
 #clr.AddReference("ComicRack.Engine")
 from cYo.Projects.ComicRack.Engine import MangaYesNo, YesNo
 
-############Set Paths##############
 
+############Set Paths##############
 FOLDER = FileInfo(__file__).DirectoryName + Path.DirectorySeparatorChar.ToString()
 IMGFOLDER = FOLDER + 'images' + Path.DirectorySeparatorChar.ToString()
 DATFILE = Path.Combine(FOLDER, 'dataMan.dat') #can load 1.24 text files or 2.3.1 xml files saves as xml
@@ -57,6 +57,7 @@ WIKI = 'http://code.google.com/p/cr-data-manager/'
 MANUAL = 'http://code.google.com/p/cr-data-manager/downloads/list'
 
 COMPARE_CASE_INSENSITIVE = True
+
 
 #############End set constant variables##################
 
