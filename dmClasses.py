@@ -803,9 +803,9 @@ class dmParameters(dmNode):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:GetList(book, strFieldName)'
         strList = getattr(book, strFieldName)
         if strList == None or strList == '': 
-            strList = List[str](''.Split(Array[str](dmGlobals.CRLISTDELIMITER), StringSplitOptions.RemoveEmptyEntries))
+            strList = ''.split(dmGlobals.CRLISTDELIMITER)
         else:
-            strList = List[str](strList.Split(Array[str](dmGlobals.CRLISTDELIMITER), StringSplitOptions.RemoveEmptyEntries))
+            strList = strList.split(dmGlobals.CRLISTDELIMITER)
         return strList
 
     def GetCustomField(self, book, strFieldName):
