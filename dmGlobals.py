@@ -56,7 +56,7 @@ DONATE = 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=U
 WIKI = 'http://code.google.com/p/cr-data-manager/'
 MANUAL = 'http://code.google.com/p/cr-data-manager/downloads/list'
 
-COMPARE_CASE_INSENSITIVE = True
+COMPARE_CASE_SENSITIVE = ReadKeyAsBool(INIFILE, 'CaseSensitive')
 
 
 #############End set constant variables##################
@@ -456,7 +456,8 @@ class dmConversionError(dmException):
         self.msg = 'Could not convert \'' + self.value + '\' to type \'' + self.type + '\'.'
         pass
 
-
+def GetStringAsList(strList):
+    return strList.Split(CRLISTDELIMITER)
 
 class dmNodeCompileException(dmException):
     def __init__(self, strMessage, dmNodeParent):

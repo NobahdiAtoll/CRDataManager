@@ -803,7 +803,7 @@ class dmParameters(dmNode):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmParameters:GetList(book, strFieldName)'
         strList = getattr(book, strFieldName)
         if strList == None or strList == '': 
-            strList = ''.split(dmGlobals.CRLISTDELIMITER)
+            strList = []
         else:
             strList = strList.split(dmGlobals.CRLISTDELIMITER)
         return strList
@@ -1218,10 +1218,11 @@ class dmAction(dmParameters):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmAction:SetValue(book, objNewValue, stringFieldName)'
 
         FieldValue = self.Field
-        previousVal = self.GetFieldValue(book, FieldValue)
         
         if strField != None:
             FieldValue = strField
+
+        previousVal = self.GetFieldValue(book, FieldValue)
 
         newVal = newValue
 
@@ -1231,15 +1232,15 @@ class dmAction(dmParameters):
             newVal = dmGlobals.CRLISTDELIMITER.join(newVal)
             previousVal = dmGlobals.CRLISTDELIMITER.join(previousVal)
 
+
         strReport = ''            
         if FieldValue in dmGlobals.ALLOWEDVALS:
             try:
-                if previousVal != newVal: #only set value if necessary
-                    setattr(book, FieldValue, newVal)
-                    #prepare the report
-                    strReport = '    Field: ' + FieldValue + '    Action: ' + self.ToString()
-                    strReport = strReport + System.Environment.NewLine + '        Previous Value: ' + dmGlobals.ToString(previousVal)
-                    strReport = strReport + System.Environment.NewLine + '        New Value: ' + dmGlobals.ToString(newVal) + '\r\n'
+                setattr(book, FieldValue, newVal)
+                #prepare the report
+                strReport = '    Field: ' + FieldValue + '    Action: ' + self.ToString()
+                strReport = strReport + System.Environment.NewLine + '        Previous Value: ' + dmGlobals.ToString(previousVal)
+                strReport = strReport + System.Environment.NewLine + '        New Value: ' + dmGlobals.ToString(newVal) + '\r\n'
             except Exception as er:
                 #report errors instead
                 strReport = '    An unexpected error occured in Action: ' + self.ToString() + '    Parent Ruleset : ' + self.Parent.Name
@@ -1266,7 +1267,6 @@ class dmAction(dmParameters):
         objReturn = self.GetFieldValue(book, strFieldName)
         if strFieldName in dmGlobals.FIELDSLIST:
             objReturn.append(strAppendString)
-            objReturn = dmGlobals.CRLISTDELIMITER.join(objReturn)
         elif strFieldName in dmGlobals.FIELDSMULTILINE:
             objReturn = objReturn + System.Environment.NewLine + strAppendString
         else:
@@ -1363,23 +1363,35 @@ class dmAction(dmParameters):
         if self.Field in dmGlobals.FIELDSLIST:
             oldList = self.GetFieldValue(book, self.Field)
             newList = []
-            
-            for getItem in getValue:
-                if getItem.lower() == finditem.lower():
-                    newList.Add(replaceitem)
-                    break 
-                else:
-                    newList.Add(getItem)
-                        
+            if not dmGlobals.COMPARE_CASE_SENSITIVE:
+                for getItem in getValue:
+                    if getItem.lower() == finditem.lower():
+                        newList.Add(replaceitem)
+                        break 
+                    else:
+                        newList.Add(getItem)
+            else:
+                for getItem in getValue:
+                    if getItem == finditem:
+                        newList.Add(replaceitem)
+                        break 
+                    else:
+                        newList.Add(getItem)           
             newValue = newList
     
         else:
             idx = 0
+            if not dmGlobals.COMPARE_CASE_SENSITIVE:
+                while finditem.lower() in newValue:
+                    idx = newValue.lower().find(finditem.lower()) #find the index of the value to replace
+                    newValue = newValue.Remove(idx, len(finditem))
+                    newValue = newValue.Insert(idx, replaceitem)
+            else:
+                while finditem.lower() in newValue:
+                    idx = newValue.find(finditem) #find the index of the value to replace
+                    newValue = newValue.Remove(idx, len(finditem))
+                    newValue = newValue.Insert(idx, replaceitem)
 
-            while finditem.lower() in newValue:
-                idx = newValue.lower().find(finditem.lower()) #find the index of the value to replace
-                newValue = newValue.Remove(idx, len(finditem))
-                newValue = newValue.Insert(idx, replaceitem)
             
         strReport = self.SetFieldValue(book, newValue)
 
@@ -1452,6 +1464,8 @@ class dmAction(dmParameters):
 
     def RegExVarAppend(self, book):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmAction:RegexVarAppend(book)'
+
+        
         myString = self.GetFieldValue(book, self.Field) #get the value of the Field in the book
         myVal = self.ReplaceReferenceStrings(self.Value, book) #replace reference strings on the proposed value
 
@@ -1476,7 +1490,7 @@ class dmAction(dmParameters):
                     strNewValue = ''
                     
                     strNewValue = self.GetAppendedField(strFieldName, book, matchItem.Groups[groupName].Value) #get the text that will replace the field
-                    
+                    strOldValue = self.GetFieldValue
                     strReport = strReport + self.SetFieldValue(book, strNewValue, strFieldName) #replace the field
                     
             except Exception as er:
@@ -1484,6 +1498,7 @@ class dmAction(dmParameters):
                 pass
         return strReport
 
+   
     def RemoveLeading(self, book):
         if dmGlobals.TraceFunctionMessages: print 'Method: dmAction:RemoveLeading(book)'
         
