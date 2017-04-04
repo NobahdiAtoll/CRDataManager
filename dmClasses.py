@@ -930,10 +930,10 @@ class dmRule(dmParameters):
                 
         if self.Field in dmGlobals.FIELDSLIST: #search as string list            
             for check in getValue:
-                if check.lower() == compareValue.lower():
+                if check.lower().Contains(compareValue.lower()):
                     return True
         else: #search as string
-            if compareValue.lower() in getValue.lower():
+            if getValue.lower().Contains(compareValue.lower()):
                 return True
         return False
 
@@ -950,21 +950,60 @@ class dmRule(dmParameters):
         compareValue = self.ReplaceReferenceStrings(self.Value, book).split(dmGlobals.DMLISTDELIMITER)  #value to compare
                 
         for compareItem in compareValue:
-            if self.Field in dmGlobals.FIELDSLIST: #compare list against list
-                
+            if self.Field in dmGlobals.FIELDSLIST: #compare list against list                
                 for getItem in getValue: #compare list items as lowercase
-                    if getItem.lower() == compareItem.lower():
+                    if getItem.lower().Contains(compareItem.lower()):
                         return True #return true at first instance of match
             else: #compare list against string
-                if compareItem.lower() in getValue.lower(): #compare string item against list item
+                if getValue.lower().Contains(compareItem.lower()): #compare string item against list item
                     return True #return true at first instance of match
         return False #all else failing return false
-
+    
     def NotContainsAnyOf(self, book):
         """Only applicable with string and list"""
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:NotContainsAnyOf(book)'
         return not self.ContainsAnyOf(book)
     
+    def ListContains(self, book):
+         """Only applicable with string and list"""
+         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:Contains(book)'
+
+         for check in getValue:
+             if check.lower() == compareValue.lower():
+                 return True
+    
+    def NotListContains(self, book):
+        return not self.ListContains(book)
+    
+    def ListContainsAnyOf(self, book):
+        """Only applicable with string and list"""
+        if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:ContainsAnyOf(book)'
+        
+        getValue = self.GetFieldValue(book, self.Field) #get Value from book
+        compareValue = self.ReplaceReferenceStrings(self.Value, book).split(dmGlobals.DMLISTDELIMITER)  #value to compare
+                
+        for compareItem in compareValue:
+            if self.Field in dmGlobals.FIELDSLIST: #compare list against list                
+                for getItem in getValue: #compare list items as lowercase
+                    if getItem.lower().Contains(compareItem.lower()):
+                        return True #return true at first instance of match
+            else: #compare list against string
+                if getValue.lower().Contains(compareItem.lower()): #compare string item against list item
+                    return True #return true at first instance of match
+    
+    def NotListContainsAnyOf(self, book):
+        return not self.ListContainsAnyOf(book)
+    
+    def ListContainsAllOf(self, book):
+
+        pass
+    
+    def ListContainsAllOf(self, book):
+        return not self.ListContainsAllOf(book)
+        pass
+
+
+
     def ContainsAllOf(self, book):
         """Only applicable with string and list"""
         if dmGlobals.TraceFunctionMessages: print 'Method: dmRule:ContainsAllOf(book)'
@@ -976,10 +1015,10 @@ class dmRule(dmParameters):
         for compareItem in compareValue:
             if self.Field in dmGlobals.FIELDSLIST: #compare list against list                
                 for getItem in getValue: #compare list items as lowercase
-                    if getItem.lower() == compareItem.lower():
+                    if getItem.lower().Contains(compareItem.lower()):
                         count = count + 1 #add a match count on match
             else: #compare list against string
-                if compareItem.lower() in getValue.lower(): #compare string item against list item
+                if getValue.lower().Contains(compareValue.lower()): #compare string item against list item
                     count = count + 1 #add a match count on match
         return count == len(compareValue)  #return wheter count of matches and count of compareValue list equal
 
@@ -1226,17 +1265,19 @@ class dmAction(dmParameters):
 
         newVal = newValue
 
+        strReport = ''            
         if FieldValue in dmGlobals.FIELDSLIST:
             if dmGlobals.SortLists:
                 newVal.sort()
             newVal = dmGlobals.CRLISTDELIMITER.join(newVal)
             previousVal = dmGlobals.CRLISTDELIMITER.join(previousVal)
-
-
-        strReport = ''            
+        
         if FieldValue in dmGlobals.ALLOWEDVALS:
             try:
-                setattr(book, FieldValue, newVal)
+                if FieldValue in dmGlobals.FIELDSNUMERIC:
+                    setattr(book, FieldValue, dmGlobals.StringToFloat(newVal)) #convert to float
+                else:
+                    setattr(book, FieldValue, newVal.ToString())
                 #prepare the report
                 strReport = '    Field: ' + FieldValue + '    Action: ' + self.ToString()
                 strReport = strReport + System.Environment.NewLine + '        Previous Value: ' + dmGlobals.ToString(previousVal)

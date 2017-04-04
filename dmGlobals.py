@@ -102,9 +102,8 @@ FIELDSBOOL = ReadKeyAsStringList(INIFILE, 'boolKeys')
 ALLOWEDKEYMODIFIERSBOOL = ReadKeyAsStringList(INIFILE, 'allowedKeyModifierBool')
 ALLOWEDVALMODIFIERSBOOL = ReadKeyAsStringList(INIFILE, 'allowedValModifierBool')
 
-FIELDSCUSTOM = ReadKeyAsStringList(INIFILE, 'customKeys')
-ALLOWEDKEYMODIFIERSCUSTOM = ReadKeyAsStringList(INIFILE, 'allowedKeyModifierCustom')
-ALLOWEDVALMODIFIERSCUSTOM = ReadKeyAsStringList(INIFILE, 'allowedValModifierCustom')
+ALLOWEDKEYMODIFIERSCUSTOM = ReadKeyAsStringList(INIFILE, 'allowedKeyModifierString')
+ALLOWEDVALMODIFIERSCUSTOM = ReadKeyAsStringList(INIFILE, 'allowedValModifierString')
 
 FIELDSNUMERIC = ReadKeyAsStringList(INIFILE, 'numericalKeys')
 FIELDSPSUEDONUMERIC = ReadKeyAsStringList(INIFILE, 'pseudoNumericalKeys')
